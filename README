@@ -1,0 +1,20 @@
+Telajax - An OpenCL-based library to run C code on device
+
+Build
+=====
+
+$ mkdir build 
+$ cd build
+$ cmake -DCMAKE_INSTALL_PREFIX=<prefix> -DOPENCL_ROOT=$K1_TOOLCHAIN_DIR .. 
+$ make
+
+Test
+====
+
+$ make test
+
+Install
+=======
+
+$ make install
+
