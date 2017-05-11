@@ -2,6 +2,7 @@ enable_testing()
 
 set(TESTS_LIST
 	simple_telajax
+	hello_world
 )
 
 # # Build and add test
