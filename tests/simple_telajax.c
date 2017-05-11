@@ -4,10 +4,12 @@
 #define VEC_LENGTH 16
 
 const char* kernel_ocl_wrapper = "\n" \
-"void _vec_add(int n, __global float* x, __global float* y);\n" \
+"void _vec_add(int n, __global float* x, __global float* y, unsigned long* timestamp_in, unsigned long* timestamp_out);\n" \
 "\n" \
 "__kernel void vec_add(int n, __global float* x, __global float* y){\n" \
-"	_vec_add(n, x, y);\n" \
+"	unsigned long timestamp_in, timestamp_out;\n" \
+"	_vec_add(n, x, y, &timestamp_in, &timestamp_out);\n" \
+"	printf(\"[OCL] Exec time of _vec_add is %d cycles\\n\", timestamp_out - timestamp_in);\n" \
 "}\n" \
 "\n";
 
@@ -15,11 +17,13 @@ const char* kernel_ocl_wrapper = "\n" \
 const char* kernel_code = "\n" \
 "#include <stdio.h> \n " \
 "\n" \
-"void _vec_add(int n, float* x, float* y){ \n" \
+"void _vec_add(int n, float* x, float* y, unsigned long* timestamp_in, unsigned long* timestamp_out){ \n" \
 "	\n" \
+"	*timestamp_in = __k1_read_dsu_timestamp(); \n" \
 "	for(int i = 0; i < n; i++){ \n" \
 "		y[i] += x[i]; \n" \
 "	} \n" \
+"	*timestamp_out = __k1_read_dsu_timestamp(); \n" \
 "	\n" \
 "} \n" ;
 
