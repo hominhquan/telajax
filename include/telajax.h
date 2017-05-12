@@ -62,6 +62,11 @@ typedef struct kernel_s
 device_t telajax_device_init(int argc, char** argv, int* error);
 
 /**
+ * Return 1 if telajax is already initialized, 0 otherwise
+ */
+int telajax_is_initialized();
+
+/**
  * Wait for termination of all on-flight kernels and finalize telajax
  * @param[in]  device  Device
  * @return 0 on success, -1 otherwise
