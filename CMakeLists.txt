@@ -16,9 +16,9 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR})
 
 find_package(OpenCL REQUIRED)
 
-link_directories(${OPENCL_LIBRARIES})
+link_directories(${OpenCL_LIBRARIES})
 
-include_directories(./include ${OPENCL_INCLUDE_DIRS})
+include_directories(./include ${OpenCL_INCLUDE_DIR})
 
 set (CMAKE_C_FLAGS " -g -std=gnu99 ${CMAKE_C_FLAGS} ")
 
