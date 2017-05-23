@@ -30,6 +30,9 @@
 #   OpenCL_INCLUDE_DIR    - the OpenCL include directory
 #   OpenCL_LIBRARY        - the path to the OpenCL library
 #
+# Accepts the following variable as CMake or environment variable:
+#
+#   OPENCL_ROOT - The root directory of the OpenCL implementation found
 
 function(_FIND_OPENCL_VERSION)
   include(CheckSymbolExists)
@@ -70,6 +73,7 @@ find_path(OpenCL_INCLUDE_DIR
   NAMES
     CL/cl.h OpenCL/cl.h
   HINTS
+    ${OPENCL_ROOT}/include
     $ENV{K1_TOOLCHAIN_DIR}/include
   PATHS
     ENV "PROGRAMFILES(X86)"
@@ -91,7 +95,8 @@ if(WIN32)
     find_library(OpenCL_LIBRARY
       NAMES OpenCL
       HINTS
-        $ENV{K1_TOOLCHAIN_DIR}/lib64
+      ${OPENCL_ROOT}/lib
+        $ENV{K1_TOOLCHAIN_DIR}/lib
       PATHS
         ENV "PROGRAMFILES(X86)"
         ENV AMDAPPSDKROOT
@@ -105,12 +110,12 @@ if(WIN32)
         lib/x86
         lib/Win32
         lib
-        lib64
         OpenCL/common/lib/Win32)
   elseif(CMAKE_SIZEOF_VOID_P EQUAL 8)
     find_library(OpenCL_LIBRARY
       NAMES OpenCL
       HINTS
+        ${OPENCL_ROOT}/lib64
         $ENV{K1_TOOLCHAIN_DIR}/lib64
       PATHS
         ENV "PROGRAMFILES(X86)"
@@ -124,7 +129,6 @@ if(WIN32)
         "AMD APP/lib/x86_64"
         lib/x86_64
         lib/x64
-        lib
         lib64
         OpenCL/common/lib/x64)
   endif()
@@ -132,6 +136,7 @@ else()
   find_library(OpenCL_LIBRARY
     NAMES OpenCL
     HINTS
+        ${OPENCL_ROOT}/lib64
         $ENV{K1_TOOLCHAIN_DIR}/lib64
     PATHS
       ENV AMDAPPSDKROOT
