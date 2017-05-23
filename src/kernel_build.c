@@ -57,27 +57,20 @@ void _vec_add(int n, float* x, float* y)
 // This code is appended in the head of any C kernel_code
 const char* telajax_extra_code_prefix = "\n" \
 "\n" \
-"#include <stdio.h> \n " \
-"#include <stdint.h> \n " \
-"static __inline__ __k1_uint64_t                                                  \n" \
-"__k1_read_dsu_timestamp(void)                                                    \n" \
-"{                                                                                \n" \
-" #  ifdef __mos__                                                                \n" \
-"   register unsigned long long int ret __asm__(\"$p0\");                         \n" \
-"   __asm__ __volatile__ (\"scall 1059 \\n\\t;;\"                                 \n" \
-"   : \"+r\" (ret)                                                                \n" \
-"   :                                                                             \n" \
-"   : \"memory\",  \"r2\", \"r3\", \"r4\", \"r5\", \"r6\", \"r7\", \"r8\", \"r9\", \"r11\", \"r30\", \"r31\", \"r32\", \"r33\", \"r34\", \"r35\", \"r36\", \n" \
-"   \"r37\", \"r38\", \"r39\",                                                          \n" \
-"   \"r40\", \"r41\", \"r42\", \"r43\", \"r44\", \"r45\", \"r46\", \"r47\", \"r48\", \"r49\", \"r50\", \"r51\", \"r52\", \"r53\", \"r54\", \"r55\", \n" \
-"   \"r56\", \"r57\", \"r58\", \"r59\", \"r60\", \"r61\", \"r62\", \"r63\",       \n" \
-"   \"lc\");                                                                      \n" \
-"   return ret;                                                                   \n" \
-"                                                                                 \n" \
-" #  else                                                                         \n" \
-"   return __k1_umem_read64 ((void*)&mppa_trace[__k1_get_dsu_id()]->timestamp);   \n" \
-" #  endif                                                                        \n" \
-"} \n";
+"#include <stdlib.h> \n" \
+"#include <stdio.h> \n" \
+"#include <vbsp.h> \n" \
+"#include <utask.h> \n" \
+"#include <sys/time.h> \n" \
+"#include <math.h> \n" \
+"#include <stdlib.h> \n" \
+"#include <mppa_power.h> \n" \
+"#include <mppa_rpc.h> \n" \
+"#include <mppa_async.h> \n" \
+"#include <mppa_remote.h> \n" \
+"#include <vbsp.h> \n" \
+"#include <string.h> \n" \
+;
 
 
 #define RANDOM_STRING_LENGTH 8
