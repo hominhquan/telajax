@@ -1,4 +1,4 @@
-/* Copyright (c) 2017 Kalray
+Copyright (c) 2017 Kalray
 
 Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
@@ -24,24 +24,3 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
 ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-*/
-
-#include "telajax.h"
-
-int
-telajax_kernel_set_callback(
-	void (CL_CALLBACK *pfn_event_notify)(
-		cl_event event,
-		cl_int event_command_exec_status,
-		void* user_data
-	),
-	void* user_data, kernel_t* kernel)
-{
-	int err = 0;
-
-	err = clSetEventCallback(kernel->_event, CL_COMPLETE, pfn_event_notify, user_data);
-	assert(!err);
-
-	return (err == CL_SUCCESS) ? 0 : -1;
-}
