@@ -98,7 +98,7 @@ telajax_kernel_build(
 
 	// get a random string
 	snprintf(cmd, COMMAND_LENGTH,
-		"head -c 512 /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w %d | head -n 1",
+		"head -c 64 /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w %d | head -n 1",
 		RANDOM_STRING_LENGTH);
 	FILE* fpopen = popen(cmd, "r");
 	if (fpopen == NULL) {
