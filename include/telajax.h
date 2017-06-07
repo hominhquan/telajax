@@ -34,6 +34,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 extern "C" {
 #endif
 
+#define _GNU_SOURCE
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -76,6 +78,11 @@ typedef struct kernel_s
 	size_t     _localSize[3];
 } kernel_t;
 
+typedef struct wrapper_s
+{
+	char*      _name;
+	cl_program _program;
+} wrapper_t;
 
 // =============================================================================
 // Device Init and finalize and sync
@@ -164,12 +171,35 @@ int telajax_device_mem_release(mem_t device_mem);
 // =============================================================================
 
 /**
+ * Build up a wrapper from an OpenCL wrapper code
+ * @param[in]  kernel_ocl_name     OpenCL wrapper name
+ * @param[in]  kernel_ocl_wrapper  OpenCL wrapper code
+ * @param[in]  options      Compilation options of wrapper (ignored if NULL)
+ * @param[in]  device       Device on which kernel will be built for.
+ *                          This identifies the hardware and uses the correct
+ *                          compilation steps (and optimization).
+ * @param[out] error        Error code : 0 on success, -1 otherwise
+ * @return    wrapper_t
+ */
+wrapper_t telajax_wrapper_build(
+	const char* kernel_ocl_name,
+	const char* kernel_ocl_wrapper,
+	const char* options,
+	device_t* device, int* error);
+
+/**
+ * Release a wrapper
+ * @param[out] wrapper       Wrapper to release
+ * @return 0 on success, -1 otherwise
+ */
+int telajax_wrapper_release(wrapper_t* wrapper);
+
+/**
  * Build up a kernel from a code source
  * @param[in]  kernel_code  String containing C code (ignored if NULL)
  * @param[in]  cflags       Compilation flags of kernel (ignored if NULL)
  * @param[in]  lflags       Link flags of kernel (ignored if NULL)
- * @param[in]  kernel_ocl_name     OpenCL wrapper name
- * @param[in]  kernel_ocl_wrapper  OpenCL wrapper code
+ * @param[in]  wrapper      OpenCL wrapper
  * @param[in]  device       Device on which kernel will be built for.
  *                          This identifies the hardware and uses the correct
  *                          compilation steps (and optimization).
@@ -179,8 +209,7 @@ int telajax_device_mem_release(mem_t device_mem);
 kernel_t telajax_kernel_build(
 	const char* kernel_code,
 	const char* cflags, const char* lflags,
-	const char* kernel_ocl_name,
-	const char* kernel_ocl_wrapper,
+	const wrapper_t* wrapper,
 	device_t* device, int* error);
 
 /**

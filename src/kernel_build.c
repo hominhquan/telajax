@@ -72,34 +72,25 @@ const char* telajax_extra_code_prefix = "\n" \
 "#include <string.h> \n" \
 ;
 
-
 #define RANDOM_STRING_LENGTH 8
 #define FILE_PATH_LENGTH     128
 #define COMMAND_LENGTH       1024
-
-static cl_program internal_wrapper = NULL;
-
-void telajax_kernel_release_internal_wrapper()
-{
-	clReleaseProgram(internal_wrapper);
-}
 
 kernel_t
 telajax_kernel_build(
 	const char* kernel_code,
 	const char* cflags, const char* lflags,
-	const char* kernel_ocl_name,
-	const char* kernel_ocl_wrapper,
+	const wrapper_t* wrapper,
 	device_t* device, int* error)
 {
-	int err;
+	int err = 0;
 	char cmd[COMMAND_LENGTH];
 	char rand_string[RANDOM_STRING_LENGTH+1];
 	char rand_file_path_src[FILE_PATH_LENGTH];
 	char rand_file_path_obj[FILE_PATH_LENGTH];
 	kernel_t kernel_res;
 
-	if(kernel_code == NULL || kernel_ocl_name == NULL || kernel_ocl_wrapper == NULL){
+	if(kernel_code == NULL || wrapper == NULL){
 		err = -1; goto ERROR;
 	}
 
@@ -162,21 +153,7 @@ telajax_kernel_build(
 	//  declare two cl_program
 	cl_program input_programs[2];
 
-	// build wrapper program
-	if(internal_wrapper == NULL){
-		internal_wrapper = clCreateProgramWithSource(device->_context, 1,
-					(const char **) &kernel_ocl_wrapper, NULL, &err);
-		assert(internal_wrapper);
-
-		err = clBuildProgram(internal_wrapper, 0, NULL, NULL, NULL, NULL);
-		assert(!err);
-
-		size_t dummy;
-		err = clGetProgramInfo(internal_wrapper, CL_PROGRAM_BINARY_SIZES,
-			sizeof(dummy), &dummy, NULL);
-		assert(!err);
-	}
-	input_programs[0] = internal_wrapper;
+	input_programs[0] = wrapper->_program;
 
 	// create elf program and link
 	// read the .o
@@ -199,13 +176,11 @@ telajax_kernel_build(
 	assert(!err);
 	assert(program_final);
 
-	// release input_programs
+	// release input_programs[1]
 	clReleaseProgram(input_programs[1]);
-	// Releasing internal_wrapper should not be done here, but at the end of Telajax
-	// clReleaseProgram(input_programs[0]);
 
 	// build the OpenCL kernel associated with program_final
-	cl_kernel kernel_final = clCreateKernel(program_final, kernel_ocl_name, &err);
+	cl_kernel kernel_final = clCreateKernel(program_final, wrapper->_name, &err);
 	assert(kernel_final);
 	assert(!err);
 

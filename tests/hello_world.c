@@ -73,13 +73,17 @@ int main()
 	device_t device = telajax_device_init(0, NULL, &err);
 	assert(!err);
 
+	// Build wrapper on device
+	wrapper_t wrapper = telajax_wrapper_build("hello_world", kernel_ocl_wrapper,
+		NULL, &device, &err);
+	assert(!err);
+
 	// Build kernel on device
 	kernel_t helloworld_kernel = telajax_kernel_build(
 		kernel_code,
 		" -std=c99 ",       // cflags
 		"",                 // lflags
-		"hello_world",          // kernel_ocl_name
-		kernel_ocl_wrapper,
+		&wrapper,           // wrapper
 		&device, &err);
 	assert(!err);
 
@@ -94,6 +98,9 @@ int main()
 
 	// release kernel
 	telajax_kernel_release(&helloworld_kernel);
+
+	// release wrapper
+	telajax_wrapper_release(&wrapper);
 
 	// Finalize Telajax
 	telajax_device_finalize(&device);

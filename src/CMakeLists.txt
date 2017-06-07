@@ -13,6 +13,7 @@ set (TELAJAX_SRC
 	kernel_set_args.c
 	kernel_set_callback.c
 	kernel_wait.c
+	wrapper.c
 )
 
 add_library(telajax SHARED ${TELAJAX_SRC})
