@@ -59,6 +59,10 @@ telajax_device_init(int argc, char** argv, int* error)
 	int initialized = __sync_val_compare_and_swap(&telajax_initialized, 0, 1);
 
 	if(initialized == 0){
+		// set POCL_LEAVE_KERNEL_COMPILER_TEMP_FILES to 1 to force pocl keeping
+		// .o files of wrapper program
+		setenv("POCL_LEAVE_KERNEL_COMPILER_TEMP_FILES", "1", 1 /*overwrite*/);
+
 		// User can set device type by setting env var for example
 		// TELAJAX_DEVICE_TYPE=ACCELERATOR
 		cl_device_type device_type =  (getenv("TELAJAX_DEVICE_TYPE") == NULL) ?

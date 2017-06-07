@@ -77,6 +77,13 @@ const char* telajax_extra_code_prefix = "\n" \
 #define FILE_PATH_LENGTH     128
 #define COMMAND_LENGTH       1024
 
+static cl_program internal_wrapper = NULL;
+
+void telajax_kernel_release_internal_wrapper()
+{
+	clReleaseProgram(internal_wrapper);
+}
+
 kernel_t
 telajax_kernel_build(
 	const char* kernel_code,
@@ -156,12 +163,20 @@ telajax_kernel_build(
 	cl_program input_programs[2];
 
 	// build wrapper program
-	input_programs[0] = clCreateProgramWithSource(device->_context, 1,
+	if(internal_wrapper == NULL){
+		internal_wrapper = clCreateProgramWithSource(device->_context, 1,
 					(const char **) &kernel_ocl_wrapper, NULL, &err);
-	assert(input_programs[0]);
+		assert(internal_wrapper);
 
-	err = clBuildProgram(input_programs[0], 0, NULL, NULL, NULL, NULL);
-	assert(!err);
+		err = clBuildProgram(internal_wrapper, 0, NULL, NULL, NULL, NULL);
+		assert(!err);
+
+		size_t dummy;
+		err = clGetProgramInfo(internal_wrapper, CL_PROGRAM_BINARY_SIZES,
+			sizeof(dummy), &dummy, NULL);
+		assert(!err);
+	}
+	input_programs[0] = internal_wrapper;
 
 	// create elf program and link
 	// read the .o
@@ -185,8 +200,9 @@ telajax_kernel_build(
 	assert(program_final);
 
 	// release input_programs
-	clReleaseProgram(input_programs[0]);
 	clReleaseProgram(input_programs[1]);
+	// Releasing internal_wrapper should not be done here, but at the end of Telajax
+	// clReleaseProgram(input_programs[0]);
 
 	// build the OpenCL kernel associated with program_final
 	cl_kernel kernel_final = clCreateKernel(program_final, kernel_ocl_name, &err);

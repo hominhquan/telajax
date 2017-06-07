@@ -29,6 +29,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "telajax.h"
 
+void telajax_kernel_release_internal_wrapper();
+
 static int telajax_finalized = 0;
 
 /**
@@ -51,6 +53,8 @@ telajax_device_finalize(device_t* device)
 
 	if(finalized == 0){
 		clFinish(device->_queue);
+
+		telajax_kernel_release_internal_wrapper();
 
 		clReleaseCommandQueue(device->_queue);
 		clReleaseContext(device->_context);
