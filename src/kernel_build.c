@@ -72,6 +72,15 @@ const char* telajax_extra_code_prefix = "\n" \
 "#include <string.h> \n" \
 ;
 
+const char* default_cflags = "" \
+" -mhypervisor" \
+" -march=k1b" \
+" -O3" \
+" -fpic" \
+" -ffunction-sections -fdata-sections -fno-common" \
+" -Wa,--check-resources" \
+;
+
 #define RANDOM_STRING_LENGTH 8
 #define FILE_PATH_LENGTH     128
 #define COMMAND_LENGTH       1024
@@ -133,12 +142,14 @@ telajax_kernel_build(
 	}
 	snprintf(cmd, COMMAND_LENGTH,
 		"%s"                 // K1_TOOLCHAIN_DIR
-		"/bin/k1-elf-gcc -mhypervisor "
+		"/bin/k1-elf-gcc "
+		" %s "               // default_cflags
 		" %s "               // cflags
 		" -c %s "            // rand_file_path_src
 		" -o %s "            // rand_file_path_obj
 		" %s "               // lflags
 		, getenv("K1_TOOLCHAIN_DIR")
+		, default_cflags
 		, cflags
 		, rand_file_path_src
 		, rand_file_path_obj
