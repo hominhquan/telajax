@@ -14,7 +14,7 @@ foreach(test ${TESTS_LIST})
 endforeach(test)
 
 # add 'test' target
-add_custom_target(test
+add_custom_target(check
 	COMMAND ${CMAKE_CTEST_COMMAND} -V
 	DEPENDS
 		${TESTS_LIST}
