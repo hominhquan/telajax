@@ -102,13 +102,17 @@ int main()
 	telajax_device_mem_write(&device, dev_x, host_x, VEC_LENGTH * sizeof(float));
 	telajax_device_mem_write(&device, dev_y, host_y, VEC_LENGTH * sizeof(float));
 
+	// Build wrapper on device
+	wrapper_t wrapper = telajax_wrapper_build("vec_add", kernel_ocl_wrapper,
+		NULL, &device, &err);
+	assert(!err);
+
 	// Build kernel on device
 	kernel_t vec_add_kernel = telajax_kernel_build(
 		kernel_code,
 		" -std=c99 ",       // cflags
 		"",                 // lflags
-		"vec_add",          // kernel_ocl_name
-		kernel_ocl_wrapper,
+		&wrapper,           // wrapper
 		&device, &err);
 	assert(!err);
 
@@ -136,6 +140,9 @@ int main()
 
 	// release kernel
 	telajax_kernel_release(&vec_add_kernel);
+
+	// release wrapper
+	telajax_wrapper_release(&wrapper);
 
 	// cleanup host buffers
 	free(host_x);
