@@ -63,13 +63,10 @@ const char* telajax_extra_code_prefix = "\n" \
 "#include <utask.h> \n" \
 "#include <sys/time.h> \n" \
 "#include <math.h> \n" \
-"#include <stdlib.h> \n" \
 "#include <mppa_power.h> \n" \
 "#include <mppa_rpc.h> \n" \
 "#include <mppa_async.h> \n" \
 "#include <mppa_remote.h> \n" \
-"#include <vbsp.h> \n" \
-"#include <string.h> \n" \
 ;
 
 const char* default_cflags = "" \
@@ -95,9 +92,9 @@ telajax_kernel_build(
 	int err = 0;
 	char cmd[COMMAND_LENGTH];
 	char rand_string[RANDOM_STRING_LENGTH+1];
-	char rand_file_path_src[FILE_PATH_LENGTH];
 	char rand_file_path_obj[FILE_PATH_LENGTH];
 	kernel_t kernel_res;
+	FILE *fp, *fpopen;
 
 	if(kernel_code == NULL || wrapper == NULL){
 		err = -1; goto ERROR;
@@ -107,7 +104,7 @@ telajax_kernel_build(
 	snprintf(cmd, COMMAND_LENGTH,
 		"head -c 64 /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w %d | head -n 1",
 		RANDOM_STRING_LENGTH);
-	FILE* fpopen = popen(cmd, "r");
+	fpopen = popen(cmd, "r");
 	if (fpopen == NULL) {
 		printf("Failed to generate a random string\n");
 		err = -1; goto ERROR;
@@ -122,18 +119,7 @@ telajax_kernel_build(
 	snprintf(tmpdir+strlen(tmpdir), FILE_PATH_LENGTH-strlen(tmpdir), "/.cache/telajax");
 	mkdir(tmpdir, S_IRWXU);
 
-	snprintf(rand_file_path_src, FILE_PATH_LENGTH, "%s/%s.c", tmpdir, rand_string);
 	snprintf(rand_file_path_obj, FILE_PATH_LENGTH, "%s/%s.o", tmpdir, rand_string);
-
-	FILE* fp;
-	fp = fopen(rand_file_path_src, "w");
-	if(fp == NULL){
-		printf("Failed to create %s on disk - %s\n", rand_file_path_src, strerror(errno));
-		err = -1; goto ERROR;
-	}
-	fwrite(telajax_extra_code_prefix, 1, strlen(telajax_extra_code_prefix), fp);
-	fwrite(kernel_code, 1, strlen(kernel_code), fp);
-	fclose(fp);
 
 	// Compile the C kernel_code to a .o
 	if(getenv("K1_TOOLCHAIN_DIR") == NULL){
@@ -145,21 +131,24 @@ telajax_kernel_build(
 		"/bin/k1-elf-gcc "
 		" %s "               // default_cflags
 		" %s "               // cflags
-		" -c %s "            // rand_file_path_src
+		" -c "
 		" -o %s "            // rand_file_path_obj
 		" %s "               // lflags
+		" -xc -"          // wait for input pipe here
 		, getenv("K1_TOOLCHAIN_DIR")
 		, default_cflags
 		, cflags
-		, rand_file_path_src
 		, rand_file_path_obj
 		, lflags
 		);
-	if(system(cmd)){
-		printf("%s\n", cmd);
-		printf("Failed to compile kernel_code\n");
+	fpopen = popen(cmd, "w");
+	if (fpopen == NULL) {
+		printf("Failed to open pipe to gcc\n");
 		err = -1; goto ERROR;
 	}
+	fwrite(telajax_extra_code_prefix, strlen(telajax_extra_code_prefix), 1, fpopen);
+	fwrite(kernel_code, strlen(kernel_code), 1, fpopen);
+	pclose(fpopen);
 
 	//  declare two cl_program
 	cl_program input_programs[2];
@@ -177,8 +166,8 @@ telajax_kernel_build(
 	fclose(fp);
 
 	input_programs[1] = clCreateProgramWithBinary(device->_context, 1,
-		&(device->_device_id), &size_ftell, (const unsigned char **) &kernel_elf_source,
-		NULL, &err);
+		&(device->_device_id), &size_ftell,
+		(const unsigned char **) &kernel_elf_source, NULL, &err);
 	assert(input_programs[1]);
 	free(kernel_elf_source);
 
@@ -196,7 +185,6 @@ telajax_kernel_build(
 	assert(!err);
 
 	// delete rand_file_path_src and rand_file_path_obj
-	remove(rand_file_path_src);
 	remove(rand_file_path_obj);
 
 	// setup kernel_res and return
@@ -214,5 +202,3 @@ ERROR:
 	if(error) *error = err;
 	return kernel_res;
 }
-
-
