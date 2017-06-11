@@ -54,6 +54,8 @@ void _vec_add(int n, float* x, float* y)
 
 */
 
+extern char* telajax_cachedir;
+
 // This code is appended in the head of any C kernel_code
 const char* telajax_extra_code_prefix = "\n" \
 "\n" \
@@ -113,13 +115,7 @@ telajax_kernel_build(
 	rand_string[RANDOM_STRING_LENGTH] = '\0';
 	pclose(fpopen);
 
-	// dump kernel_code to a .c file on disk
-	char tmpdir[FILE_PATH_LENGTH];
-	snprintf(tmpdir, FILE_PATH_LENGTH, "%s", getenv("HOME"));
-	snprintf(tmpdir+strlen(tmpdir), FILE_PATH_LENGTH-strlen(tmpdir), "/.cache/telajax");
-	mkdir(tmpdir, S_IRWXU);
-
-	snprintf(rand_file_path_obj, FILE_PATH_LENGTH, "%s/%s.o", tmpdir, rand_string);
+	snprintf(rand_file_path_obj, FILE_PATH_LENGTH, "%s/%s.o", telajax_cachedir, rand_string);
 
 	// Compile the C kernel_code to a .o
 	if(getenv("K1_TOOLCHAIN_DIR") == NULL){

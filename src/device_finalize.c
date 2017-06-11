@@ -29,6 +29,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "telajax.h"
 
+extern char* telajax_cachedir;
+
 static int telajax_finalized = 0;
 
 /**
@@ -55,6 +57,8 @@ telajax_device_finalize(device_t* device)
 		clReleaseCommandQueue(device->_queue);
 		clReleaseContext(device->_context);
 		clReleaseDevice(device->_device_id);
+
+		if(telajax_cachedir != NULL) free(telajax_cachedir);
 	}
 
 	return 0;

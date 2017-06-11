@@ -29,6 +29,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "telajax.h"
 
+char* telajax_cachedir = NULL;
+
 static int telajax_initialized = 0;
 
 /**
@@ -62,6 +64,22 @@ telajax_device_init(int argc, char** argv, int* error)
 		// set POCL_LEAVE_KERNEL_COMPILER_TEMP_FILES to 1 to force pocl keeping
 		// .o files of wrapper program
 		setenv("POCL_LEAVE_KERNEL_COMPILER_TEMP_FILES", "1", 1 /*overwrite*/);
+
+		// "If $XDG_CACHE_HOME is either not set or empty, a default equal to
+		// $HOME/.cache should be used."
+		// http://standards.freedesktop.org/basedir-spec/latest/
+		char* tmp_path = getenv("XDG_CACHE_HOME");
+
+		if (tmp_path && tmp_path[0] != '\0') {
+			asprintf(&telajax_cachedir, "%s/.cache/telajax", tmp_path);
+		}
+		else if ((tmp_path = getenv("HOME")) != NULL) {
+			asprintf(&telajax_cachedir, "%s/.cache/telajax", tmp_path);
+		}
+		else {
+			asprintf(&telajax_cachedir, "/tmp/telajax/.cache");
+		}
+		mkdir(telajax_cachedir, S_IRWXU);
 
 		// User can set device type by setting env var for example
 		// TELAJAX_DEVICE_TYPE=ACCELERATOR
