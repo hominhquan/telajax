@@ -66,6 +66,10 @@ telajax_device_init(int argc, char** argv, int* error)
 		// .o files of wrapper program
 		setenv("POCL_LEAVE_KERNEL_COMPILER_TEMP_FILES", "1", 1 /*overwrite*/);
 
+		// Force to use single-DDR because async copy on OpenCL only supports
+		// one DDR
+		setenv("MPPACL_BOARD", "emb01", 1 /*overwrite*/);
+
 		// "If $XDG_CACHE_HOME is either not set or empty, a default equal to
 		// $HOME/.cache should be used."
 		// http://standards.freedesktop.org/basedir-spec/latest/
