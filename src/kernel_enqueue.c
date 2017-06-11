@@ -30,7 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "telajax.h"
 
 int
-telajax_kernel_enqueue(kernel_t* kernel, device_t* device)
+telajax_kernel_enqueue(kernel_t* kernel, device_t* device, event_t* event)
 {
 	int err = clEnqueueNDRangeKernel(
 		device->_queue,
@@ -40,7 +40,7 @@ telajax_kernel_enqueue(kernel_t* kernel, device_t* device)
 		kernel->_globalSize,
 		kernel->_localSize,
 		0, NULL,
-		&(kernel->_event));
+		event);
 
 	assert(!err);
 

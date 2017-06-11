@@ -76,6 +76,7 @@ int main()
 	int vec_length = VEC_LENGTH;
 	int err = 0;
 	unsigned long long exec_time = 0;
+	unsigned long long exec_time_read = 0;
 
 	// Initialize device for Telajax
 	device_t device = telajax_device_init(0, NULL, &err);
@@ -97,8 +98,10 @@ int main()
 		TELAJAX_MEM_READ_WRITE, &device, &err);
 	assert(!err);
 
-	telajax_device_mem_write(&device, dev_x, host_x, VEC_LENGTH * sizeof(float));
-	telajax_device_mem_write(&device, dev_y, host_y, VEC_LENGTH * sizeof(float));
+	telajax_device_mem_write(&device, dev_x, host_x, VEC_LENGTH * sizeof(float),
+		0, NULL, NULL);
+	telajax_device_mem_write(&device, dev_y, host_y, VEC_LENGTH * sizeof(float),
+		0, NULL, NULL);
 
 	// Build wrapper on device
 	wrapper_t wrapper = telajax_wrapper_build("vec_add", kernel_ocl_wrapper,
@@ -120,21 +123,27 @@ int main()
 	telajax_kernel_set_args(3, args_size, args, &vec_add_kernel);
 
 	// Enqueue kernel
-	telajax_kernel_enqueue(&vec_add_kernel, &device);
-	telajax_kernel_set_callback(pfn_event_notify, (void*)&exec_time, &vec_add_kernel);
-
-	// Wait for kernel termination (and callback is executed in backgroud)
-	telajax_device_waitall(&device);
+	event_t kernel_event;
+	telajax_kernel_enqueue(&vec_add_kernel, &device, &kernel_event);
+	telajax_event_set_callback(pfn_event_notify, (void*)&exec_time, kernel_event);
 
 	// may read vector y from device to check if correct
-	telajax_device_mem_read(&device, dev_y, host_y, VEC_LENGTH * sizeof(float));
+	event_t read_event;
+	telajax_device_mem_read(&device, dev_y, host_y, VEC_LENGTH * sizeof(float),
+		1, &kernel_event, &read_event);
+	telajax_event_set_callback(pfn_event_notify, (void*)&exec_time_read, read_event);
+
+	// Wait
+	telajax_event_wait(1, &read_event);
+	telajax_device_waitall(&device);
 
 	printf("Vector Y is : ");
 	for(int i = 0; i < VEC_LENGTH; i++){
 		printf("%.2f %s", host_y[i], (i == VEC_LENGTH-1) ? "\n" : "");
 	}
 
-	printf("Exec_time = %llu ns\n", exec_time);
+	printf("Exec_time      = %llu ns\n", exec_time);
+	printf("Exec_time_read = %llu ns\n", exec_time_read);
 
 	// release kernel
 	telajax_kernel_release(&vec_add_kernel);

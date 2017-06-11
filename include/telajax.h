@@ -72,7 +72,6 @@ typedef struct kernel_s
 {
 	cl_program _program;
 	cl_kernel  _kernel;
-	cl_event   _event;
 	int        _work_dim;
 	size_t     _globalSize[3];
 	size_t     _localSize[3];
@@ -83,6 +82,8 @@ typedef struct wrapper_s
 	char*      _name;
 	cl_program _program;
 } wrapper_t;
+
+typedef cl_event event_t;
 
 // =============================================================================
 // Device Init and finalize and sync
@@ -144,9 +145,19 @@ mem_t telajax_device_mem_alloc(size_t size, mem_flags_t mem_flags, device_t* dev
  * @param[in]  device_mem    Device memory
  * @param[in]  host_mem      Host memory pointer
  * @param[in]  size          Size in bytes to transfer
+ * @param[in]  num_events_in_wait_list  Number of event in wait list.
+ *                           Executed immediately if zero.
+ * @param[in]  event_wait_list  List of event to wait before doing the
+ *                              memory operation. If not NULL, length of
+ *                              event_wait_list must be >= num_events_in_wait_list
+ * @param[out]  event  Event of the operation. If NULL, call is blocking.
+ *                     If not NULL, the call is non-blocking and returns immediately.
+ *                     One must later call telajax_event_wait() to wait for termination.
  * @return 0 on success, -1 otherwise
  */
-int telajax_device_mem_write(device_t* device, mem_t device_mem, void* host_mem, size_t size);
+int telajax_device_mem_write(device_t* device, mem_t device_mem, void* host_mem, size_t size,
+	const unsigned int num_events_in_wait_list, const event_t* event_wait_list,
+	event_t *event);
 
 /**
  * Read the device memory into a host memory buffer
@@ -154,9 +165,19 @@ int telajax_device_mem_write(device_t* device, mem_t device_mem, void* host_mem,
  * @param[in]  device_mem    Device memory
  * @param[in]  host_mem      Host memory pointer
  * @param[in]  size          Size in bytes to transfer
+ * @param[in]  num_events_in_wait_list  Number of event in wait list.
+ *                           Executed immediately if zero.
+ * @param[in]  event_wait_list  List of event to wait before doing the
+ *                              memory operation. If not NULL, length of
+ *                              event_wait_list must be >= num_events_in_wait_list
+ * @param[out]  event  Event of the operation. If NULL, call is blocking.
+ *                     If not NULL, the call is non-blocking and returns immediately.
+ *                     One must later call telajax_event_wait() to wait for termination.
  * @return 0 on success, -1 otherwise
  */
-int telajax_device_mem_read(device_t* device, mem_t device_mem, void* host_mem, size_t size);
+int telajax_device_mem_read(device_t* device, mem_t device_mem, void* host_mem, size_t size,
+	const unsigned int num_events_in_wait_list, const event_t* event_wait_list,
+	event_t *event);
 
 /**
  * Release a buffer on device
@@ -164,7 +185,6 @@ int telajax_device_mem_read(device_t* device, mem_t device_mem, void* host_mem, 
  * @return 0 on success, -1 otherwise
  */
 int telajax_device_mem_release(mem_t device_mem);
-
 
 // =============================================================================
 // Kernel operations
@@ -243,34 +263,40 @@ int telajax_kernel_release(kernel_t* kernel);
 int telajax_kernel_set_args(int num_args, size_t* args_size, void** args, kernel_t* kernel);
 
 /**
- * Attach a callback to a kernel to be executed on host upon kernel termination
- * @param[in]  pfn_event_notify  Pointer to the callback function
- * @param[in]  user_data         Pointer to the argument of callback
- * @param[in]  kernel            Associated kernel
+ * Enqueue the kernel to the device
+ * @param[in]  kernel   Kernel to enqueue on device
+ * @param[in]  device   Device
+ * @param[out] event    If not NULL, return an event to wait on later
  * @return 0 on success, -1 otherwise
  */
-int telajax_kernel_set_callback(
+int telajax_kernel_enqueue(kernel_t* kernel, device_t* device, event_t* event);
+
+// =============================================================================
+// Event operations
+// =============================================================================
+
+/**
+ * Attach a callback to a event
+ * @param[in]  pfn_event_notify  Pointer to the callback function
+ * @param[in]  user_data         Pointer to the argument of callback
+ * @param[in]  event             Associated event
+ * @return 0 on success, -1 otherwise
+ */
+int telajax_event_set_callback(
 	void (CL_CALLBACK *pfn_event_notify)(
 		cl_event event,
 		cl_int event_command_exec_status,
 		void* user_data
 	),
-	void* user_data, kernel_t* kernel);
+	void* user_data, event_t event);
 
 /**
- * Enqueue the kernel to the device
- * @param[in]  kernel   Kernel to enqueue on device
- * @param[in]  device   Device
+ * Wait for event
+ * @param[in]  nb_events  Number of event in list
+ * @param[in]  event_list Event list
  * @return 0 on success, -1 otherwise
  */
-int telajax_kernel_enqueue(kernel_t* kernel, device_t* device);
-
-/**
- * Wait for termination of a kernel
- * @param[in]  kernel   Kernel to wait
- * @return 0 on success, -1 otherwise
- */
-int telajax_kernel_wait(kernel_t* kernel);
+int telajax_event_wait(int nb_events, const event_t *event_list);
 
 #ifdef __cplusplus
 }

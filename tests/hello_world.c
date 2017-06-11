@@ -88,8 +88,9 @@ int main()
 	assert(!err);
 
 	// Enqueue kernel
-	telajax_kernel_enqueue(&helloworld_kernel, &device);
-	telajax_kernel_set_callback(pfn_event_notify, (void*)&exec_time, &helloworld_kernel);
+	event_t kernel_event;
+	telajax_kernel_enqueue(&helloworld_kernel, &device, &kernel_event);
+	telajax_event_set_callback(pfn_event_notify, (void*)&exec_time, kernel_event);
 
 	// Wait for kernel termination (and callback is executed in backgroud)
 	telajax_device_waitall(&device);

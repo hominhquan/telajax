@@ -30,14 +30,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "telajax.h"
 
 int
-telajax_device_mem_write(device_t* device, mem_t device_mem, void* host_mem, size_t size)
+telajax_device_mem_write(device_t* device, mem_t device_mem, void* host_mem, size_t size,
+	const unsigned int num_events_in_wait_list, const event_t* event_wait_list,
+	event_t *event)
 {
-	int err = clEnqueueWriteBuffer(
-		device->_queue,
-		(cl_mem)device_mem,
-		CL_TRUE, 0, size,
-		host_mem, 0, NULL, NULL);
+	cl_bool blocking = event ? CL_FALSE : CL_TRUE;
 
+	int err = clEnqueueWriteBuffer(device->_queue, (cl_mem)device_mem,
+		blocking, 0, size, host_mem,
+		(cl_uint) num_events_in_wait_list, event_wait_list, (cl_event*) event);
 	assert(!err);
 
 	return err;
