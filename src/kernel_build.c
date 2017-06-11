@@ -54,7 +54,8 @@ void _vec_add(int n, float* x, float* y)
 
 */
 
-extern char* telajax_cachedir;
+char* telajax_cachedir = NULL;
+char* telajax_compiler = NULL;
 
 // This code is appended in the head of any C kernel_code
 const char* telajax_extra_code_prefix = "\n" \
@@ -118,20 +119,15 @@ telajax_kernel_build(
 	snprintf(rand_file_path_obj, FILE_PATH_LENGTH, "%s/%s.o", telajax_cachedir, rand_string);
 
 	// Compile the C kernel_code to a .o
-	if(getenv("K1_TOOLCHAIN_DIR") == NULL){
-		printf("K1_TOOLCHAIN_DIR not set, you do not forget something ?\n");
-		err = -1; goto ERROR;
-	}
 	snprintf(cmd, COMMAND_LENGTH,
-		"%s"                 // K1_TOOLCHAIN_DIR
-		"/bin/k1-elf-gcc "
+		" %s "               // telajax_compiler
 		" %s "               // default_cflags
 		" %s "               // cflags
 		" -c "
 		" -o %s "            // rand_file_path_obj
 		" %s "               // lflags
 		" -xc -"          // wait for input pipe here
-		, getenv("K1_TOOLCHAIN_DIR")
+		, telajax_compiler
 		, default_cflags
 		, cflags
 		, rand_file_path_obj
@@ -158,7 +154,7 @@ telajax_kernel_build(
 	size_t size_ftell = ftell(fp);
 	fseek(fp, 0, SEEK_SET);
 	char *kernel_elf_source = (char*)malloc(size_ftell);
-	fread(kernel_elf_source, 1, size_ftell, fp);
+	fread(kernel_elf_source, size_ftell, 1, fp);
 	fclose(fp);
 
 	input_programs[1] = clCreateProgramWithBinary(device->_context, 1,

@@ -29,7 +29,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "telajax.h"
 
-char* telajax_cachedir = NULL;
+extern char* telajax_cachedir;
+extern char* telajax_compiler;
 
 static int telajax_initialized = 0;
 
@@ -69,23 +70,28 @@ telajax_device_init(int argc, char** argv, int* error)
 		// $HOME/.cache should be used."
 		// http://standards.freedesktop.org/basedir-spec/latest/
 		char* tmp_path = getenv("XDG_CACHE_HOME");
-
-		if (tmp_path && tmp_path[0] != '\0') {
+		if (tmp_path && tmp_path[0] != '\0'){
 			asprintf(&telajax_cachedir, "%s/.cache/telajax", tmp_path);
-		}
-		else if ((tmp_path = getenv("HOME")) != NULL) {
+		}else if ((tmp_path = getenv("HOME")) != NULL){
 			asprintf(&telajax_cachedir, "%s/.cache/telajax", tmp_path);
-		}
-		else {
+		}else{
 			asprintf(&telajax_cachedir, "/tmp/telajax/.cache");
 		}
 		mkdir(telajax_cachedir, S_IRWXU);
 
+		tmp_path = getenv("K1_TOOLCHAIN_DIR");
+		if (tmp_path && tmp_path[0] != '\0'){
+			asprintf(&telajax_compiler, "%s/bin/k1-elf-gcc ", tmp_path);
+		}else{
+			printf("K1_TOOLCHAIN_DIR not set, you do not forget something ?\n");
+			err = -1; goto ERROR;
+		}
+
 		// User can set device type by setting env var for example
 		// TELAJAX_DEVICE_TYPE=ACCELERATOR
-		cl_device_type device_type =  (getenv("TELAJAX_DEVICE_TYPE") == NULL) ?
-			CL_DEVICE_TYPE_ACCELERATOR :
-			convert_string_device_type(getenv("TELAJAX_DEVICE_TYPE"));
+		tmp_path = getenv("TELAJAX_DEVICE_TYPE");
+		cl_device_type device_type =  (tmp_path) ?
+			convert_string_device_type(tmp_path) : CL_DEVICE_TYPE_ACCELERATOR;
 
 		err = clGetPlatformIDs(1, &device._platform, NULL);
 		assert(!err);
@@ -98,8 +104,9 @@ telajax_device_init(int argc, char** argv, int* error)
 
 		cl_command_queue_properties properties = CL_QUEUE_PROFILING_ENABLE;
 
-		if(getenv("TELAJAX_OOO") != NULL){
-			if(!strcmp(getenv("TELAJAX_OOO"), "1")){
+		tmp_path = getenv("TELAJAX_OOO");
+		if(tmp_path){
+			if(!strcmp(tmp_path, "1")){
 				properties |= CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE;
 			}
 		}
@@ -110,6 +117,7 @@ telajax_device_init(int argc, char** argv, int* error)
 		assert(device._queue);
 	}
 
+ERROR:
 	if(error) *error = err;
 
 	return device;
