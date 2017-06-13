@@ -298,6 +298,13 @@ int telajax_event_set_callback(
  */
 int telajax_event_wait(int nb_events, const event_t *event_list);
 
+/**
+ * Release an event
+ * @param[in]  event Event to release
+ * @return 0 on success, -1 otherwise
+ */
+int telajax_event_release(event_t event);
+
 #ifdef __cplusplus
 }
 #endif

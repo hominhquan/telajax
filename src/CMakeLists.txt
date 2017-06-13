@@ -14,6 +14,7 @@ set (TELAJAX_SRC
 	wrapper.c
 	event_set_callback.c
 	event_wait.c
+	event_release.c
 )
 
 add_library(telajax SHARED ${TELAJAX_SRC})

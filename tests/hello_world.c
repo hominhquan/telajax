@@ -95,6 +95,8 @@ int main()
 	// Wait for kernel termination (and callback is executed in backgroud)
 	telajax_device_waitall(&device);
 
+	telajax_event_release(kernel_event);
+
 	printf("Exec_time = %llu ns\n", exec_time);
 
 	// release kernel

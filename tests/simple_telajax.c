@@ -137,6 +137,9 @@ int main()
 	telajax_event_wait(1, &read_event);
 	telajax_device_waitall(&device);
 
+	telajax_event_release(kernel_event);
+	telajax_event_release(read_event);
+
 	printf("Vector Y is : ");
 	for(int i = 0; i < VEC_LENGTH; i++){
 		printf("%.2f %s", host_y[i], (i == VEC_LENGTH-1) ? "\n" : "");
