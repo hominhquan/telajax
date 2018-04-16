@@ -19,7 +19,7 @@ $ mkdir -p build
 $ cd build
 $ cmake -DCMAKE_INSTALL_PREFIX=<prefix> -DOPENCL_ROOT=<path/to/opencl/lib> ..
 $ make
-$ make test
+$ make check
 ```
 
 ## Install
